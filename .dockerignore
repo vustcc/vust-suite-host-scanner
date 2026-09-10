@@ -1,0 +1,10 @@
+.git
+host-scanner.db
+frontend/node_modules
+frontend/src
+frontend/public
+frontend/.vite
+target/*
+!target/release/
+target/release/*
+!target/release/vust-host-scanner
