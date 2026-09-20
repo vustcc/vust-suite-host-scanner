@@ -9,17 +9,17 @@ importers:
   .:
     dependencies:
       '@vustcc/icons':
-        specifier: 0.1.0-alpha.1
-        version: 0.1.0-alpha.1
+        specifier: 0.1.0-alpha.2
+        version: 0.1.0-alpha.2
       '@vustcc/suite-sdk':
-        specifier: 0.1.0-alpha.1
-        version: 0.1.0-alpha.1
+        specifier: 0.1.0-alpha.2
+        version: 0.1.0-alpha.2
       '@vustcc/tokens':
-        specifier: 0.1.0-alpha.1
-        version: 0.1.0-alpha.1
+        specifier: 0.1.0-alpha.2
+        version: 0.1.0-alpha.2
       '@vustcc/vue':
-        specifier: 0.1.0-alpha.1
-        version: 0.1.0-alpha.1(vue@3.5.39(typescript@6.0.3))
+        specifier: 0.1.0-alpha.2
+        version: 0.1.0-alpha.2(vue@3.5.39(typescript@6.0.3))
       axios:
         specifier: ^1.15.2
         version: 1.18.1
@@ -639,17 +639,17 @@ packages:
       vue:
         optional: true
 
-  '@vustcc/icons@0.1.0-alpha.1':
-    resolution: {integrity: sha512-FktVZf1nuUNR0GgWlKSK/InlU2DL0yHBa/0pZdDiQoqbJm4ssS7XdshWTZlLk3RkTBPygPMZ4QMMZwmRpo3umg==}
+  '@vustcc/icons@0.1.0-alpha.2':
+    resolution: {integrity: sha512-PejSFQZVT3G2LrZ+hbKee3AfaQDzyDxM6s58cipDoNcLmBZS9A1KEu5Z8gXIGlO4PchXvNLQpmFzDbKGMNc4cA==}
 
-  '@vustcc/suite-sdk@0.1.0-alpha.1':
-    resolution: {integrity: sha512-Dv5tLYcrXMMuZCBKLDtc2uzisPg64H6fi2XzTRX3DrgtcPzST06pUnYYtKS3waNGiP/VnbpPcE0TWjllpAjxIQ==, tarball: https://registry.npmjs.org/@vustcc/suite-sdk/-/suite-sdk-0.1.0-alpha.1.tgz}
+  '@vustcc/suite-sdk@0.1.0-alpha.2':
+    resolution: {integrity: sha512-l1J10pV+OxUbVpGINNSq5b0SCf7Ci+ibLoJIsyLgNr2phU/yavLfcjW03WNLgpUPvGIjjL5LBqb7hUsZiDu+Cw==}
 
-  '@vustcc/tokens@0.1.0-alpha.1':
-    resolution: {integrity: sha512-Jie01NMMsxywlU+vCAwemQcGAMtI/zjNTBn4N60Fu4nbUfLpSBASG+z3OQc52e0L+5pFIrWkn2PiBj+1fEAYvw==}
+  '@vustcc/tokens@0.1.0-alpha.2':
+    resolution: {integrity: sha512-hllzu5ElxAAUBV5jlZ26D8suqWHlFg7WpX8VCkfIseURxxM70L6GahONZ1BfvWFdTpIEnyPTTdQTudFC88zdFg==}
 
-  '@vustcc/vue@0.1.0-alpha.1':
-    resolution: {integrity: sha512-+rGOv/eKWv4QQ3WE7PkfMTBQrtoEdM/7TIiJDreV7gZ+WG3RuNLXdcYYJLrKITKbTtp0VfcBA+wyCyHbhFVmSA==, tarball: https://registry.npmjs.org/@vustcc/vue/-/vue-0.1.0-alpha.1.tgz}
+  '@vustcc/vue@0.1.0-alpha.2':
+    resolution: {integrity: sha512-ahql04rwPDAaCFekVkNehdgcR/SKqt9zNU6ga3jC8udvXjiMRDgAg/KduI79VXRJAsQtQ6d0RbwRyObB789GrQ==}
     peerDependencies:
       vue: ^3.0.0
 
@@ -2338,16 +2338,16 @@ snapshots:
       typescript: 6.0.3
       vue: 3.5.39(typescript@6.0.3)
 
-  '@vustcc/icons@0.1.0-alpha.1': {}
+  '@vustcc/icons@0.1.0-alpha.2': {}
 
-  '@vustcc/suite-sdk@0.1.0-alpha.1': {}
+  '@vustcc/suite-sdk@0.1.0-alpha.2': {}
 
-  '@vustcc/tokens@0.1.0-alpha.1': {}
+  '@vustcc/tokens@0.1.0-alpha.2': {}
 
-  '@vustcc/vue@0.1.0-alpha.1(vue@3.5.39(typescript@6.0.3))':
+  '@vustcc/vue@0.1.0-alpha.2(vue@3.5.39(typescript@6.0.3))':
     dependencies:
-      '@vustcc/icons': 0.1.0-alpha.1
-      '@vustcc/tokens': 0.1.0-alpha.1
+      '@vustcc/icons': 0.1.0-alpha.2
+      '@vustcc/tokens': 0.1.0-alpha.2
       vue: 3.5.39(typescript@6.0.3)
 
   acorn-jsx@5.3.2(acorn@8.17.0):

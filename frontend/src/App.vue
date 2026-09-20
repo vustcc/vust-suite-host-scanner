@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { onBeforeUnmount, ref } from "vue";
 import {
   VustAlert,
   VustButton,
   VustEmpty,
+  VustGlassProvider,
+  VustGlassSurface,
   VustIcon,
+  VustInput,
   VustSelect,
   VustTabs,
   VustTag,
@@ -13,6 +16,7 @@ import {
 import HostGridPanel from "@/components/HostGridPanel.vue";
 import { useHostScanner } from "@/composables/useHostScanner";
 import { t } from "@/i18n";
+import { suiteBridge } from "@/suite-bridge";
 import type { HostScanResult, PortScanDetail } from "@/types/scanner";
 
 const {
@@ -49,6 +53,14 @@ const {
 } = useHostScanner();
 
 const activeWorkspacePanel = ref<"hosts" | "report">("hosts");
+
+/** 主控下发的材质偏好；独立运行及旧载荷默认开启。 */
+const glassEnabled = ref(suiteBridge.getThemeSnapshot().glassEnabled);
+const unsubscribeTheme = suiteBridge.subscribeTheme((theme) => {
+  glassEnabled.value = theme.glassEnabled;
+});
+
+onBeforeUnmount(unsubscribeTheme);
 
 function toggleWorkspacePanel(panel: "hosts" | "report") {
   activeWorkspacePanel.value = panel;
@@ -99,407 +111,413 @@ function portBannerText(port: PortScanDetail) {
 </script>
 
 <template>
-  <div class="host-scanner" data-page="host-scanner">
-    <div class="app-header" data-ui="toolbar">
-      <div class="header-logo">
-        <div class="header-mark" :class="{ 'is-active': isScanning }">
-          <VustIcon name="host-scanning" :size="28" />
-        </div>
-        <div class="logo-title">
-          <h1>{{ t.title }}</h1>
-          <p>{{ t.subtitle }}</p>
-        </div>
-      </div>
-
-      <div class="env-badges" v-if="networkInfo">
-        <VustTag type="default">
-          <span class="badge-label">{{ t.network }}</span>
-          <span class="badge-val">{{ networkInfo.networkMode }}</span>
-        </VustTag>
-        <VustTag :type="networkInfo.capNetRaw ? 'success' : 'danger'">
-          <span class="badge-label">ICMP</span>
-          <span class="badge-val">{{
-            networkInfo.capNetRaw ? t.available : t.limited
-          }}</span>
-        </VustTag>
-        <VustTag type="primary">
-          <span class="badge-label">{{ t.containerIp }}</span>
-          <span class="badge-val">{{ networkInfo.containerIp }}</span>
-        </VustTag>
-      </div>
-      <div v-else-if="isFetchingEnv" class="env-loading">
-        {{ t.fetchingEnv }}
-      </div>
-    </div>
-
-    <div class="app-body" data-slot="content">
-      <div class="body-left" data-ui="scan-control">
-        <!-- 配置面板 -->
-        <div class="panel config-panel">
-          <div class="panel-header">
-            <VustIcon name="settings" :size="16" />
-            <span>{{ t.scanConfig }}</span>
+  <VustGlassProvider :glass="glassEnabled">
+    <div class="host-scanner" data-page="host-scanner">
+      <div class="app-header" data-ui="toolbar">
+        <div class="header-logo">
+          <div class="header-mark" :class="{ 'is-active': isScanning }">
+            <VustIcon name="host-scanning" :size="28" />
           </div>
-          <div class="panel-body">
-            <div class="form-group">
-              <label>{{ t.targetCidr }}</label>
-              <input
-                v-model="cidr"
-                type="text"
-                :placeholder="t.cidrPlaceholder"
-                :disabled="isScanning"
-              />
-            </div>
+          <div class="logo-title">
+            <h1>{{ t.title }}</h1>
+            <p>{{ t.subtitle }}</p>
+          </div>
+        </div>
 
-            <div class="form-row">
-              <div class="form-group flex-1">
-                <label>{{ t.scanMode }}</label>
-                <VustSelect
-                  v-model="scanType"
-                  :options="scanTypeOptions"
+        <div class="env-badges" v-if="networkInfo">
+          <VustTag type="default">
+            <span class="badge-label">{{ t.network }}</span>
+            <span class="badge-val">{{ networkInfo.networkMode }}</span>
+          </VustTag>
+          <VustTag :type="networkInfo.capNetRaw ? 'success' : 'danger'">
+            <span class="badge-label">ICMP</span>
+            <span class="badge-val">{{
+              networkInfo.capNetRaw ? t.available : t.limited
+            }}</span>
+          </VustTag>
+          <VustTag type="primary">
+            <span class="badge-label">{{ t.containerIp }}</span>
+            <span class="badge-val">{{ networkInfo.containerIp }}</span>
+          </VustTag>
+        </div>
+        <div v-else-if="isFetchingEnv" class="env-loading">
+          {{ t.fetchingEnv }}
+        </div>
+      </div>
+
+      <div class="app-body" data-slot="content">
+        <div class="body-left" data-ui="scan-control">
+          <!-- 配置面板 -->
+          <VustGlassSurface class="panel config-panel">
+            <div class="panel-header">
+              <VustIcon name="settings" :size="16" />
+              <span>{{ t.scanConfig }}</span>
+            </div>
+            <div class="panel-body">
+              <div class="form-group">
+                <label>{{ t.targetCidr }}</label>
+                <VustInput
+                  v-model="cidr"
+                  type="text"
+                  :placeholder="t.cidrPlaceholder"
                   :disabled="isScanning"
                 />
               </div>
 
-              <div class="form-group flex-1">
-                <label>{{ t.timeoutSec }}</label>
-                <input
-                  v-model.number="timeout"
+              <div class="form-row">
+                <div class="form-group flex-1">
+                  <label>{{ t.scanMode }}</label>
+                  <VustSelect
+                    v-model="scanType"
+                    :options="scanTypeOptions"
+                    :disabled="isScanning"
+                  />
+                </div>
+
+                <div class="form-group flex-1">
+                  <label>{{ t.timeoutSec }}</label>
+                  <VustInput
+                    v-model="timeout"
+                    type="number"
+                    step="0.1"
+                    min="0.1"
+                    max="5.0"
+                    :disabled="isScanning"
+                  />
+                </div>
+              </div>
+
+              <div class="form-group" v-if="scanType === 'tcp'">
+                <label>{{ t.portsLabel }}</label>
+                <VustInput
+                  v-model="ports"
+                  type="text"
+                  :placeholder="t.portsPlaceholder"
+                  :disabled="isScanning"
+                />
+              </div>
+
+              <div class="form-group">
+                <label>{{ t.concurrencyLimit }}</label>
+                <VustInput
+                  v-model="maxConcurrency"
                   type="number"
-                  step="0.1"
-                  min="0.1"
-                  max="5.0"
+                  min="1"
+                  max="256"
                   :disabled="isScanning"
                 />
               </div>
-            </div>
 
-            <div class="form-group" v-if="scanType === 'tcp'">
-              <label>{{ t.portsLabel }}</label>
-              <input
-                v-model="ports"
-                type="text"
-                :placeholder="t.portsPlaceholder"
-                :disabled="isScanning"
-              />
-            </div>
+              <VustAlert v-if="configError" type="error" show-icon>
+                {{ configError }}
+              </VustAlert>
 
-            <div class="form-group">
-              <label>{{ t.concurrencyLimit }}</label>
-              <input
-                v-model.number="maxConcurrency"
-                type="number"
-                min="1"
-                max="256"
-                :disabled="isScanning"
-              />
-            </div>
-
-            <VustAlert v-if="configError" type="error" show-icon>
-              {{ configError }}
-            </VustAlert>
-
-            <div class="action-buttons">
-              <VustButton
-                class="scan-action"
-                type="primary"
-                size="large"
-                :loading="isScanning"
-                :disabled="isScanning"
-                @click="startScan"
-              >
-                <VustIcon v-if="!isScanning" name="play" :size="16" />
-                {{ isScanning ? t.scanning : t.startScan }}
-              </VustButton>
-              <VustButton
-                v-if="isScanning"
-                class="scan-action"
-                type="danger"
-                size="large"
-                :loading="isCanceling"
-                :disabled="isCanceling"
-                @click="cancelScan"
-              >
-                <VustIcon v-if="!isCanceling" name="stop" :size="16" />
-                {{ isCanceling ? t.cancelingScan : t.cancelScan }}
-              </VustButton>
-            </div>
-          </div>
-        </div>
-
-        <!-- 实时扫描看板/指标 -->
-        <div
-          class="panel stats-panel"
-          v-if="isScanning || stats.totalAlive > 0"
-        >
-          <div class="panel-header">
-            <VustIcon name="chart" :size="16" />
-            <span>{{ t.scanOverview }}</span>
-          </div>
-          <div class="panel-body">
-            <!-- 实时进度条 -->
-            <div class="progress-bar-container" v-if="isScanning">
-              <div class="progress-bar-header">
-                <span>{{ t.executing }}</span>
-                <span>{{ scanProgress }}%</span>
-              </div>
-              <div class="progress-bar-track">
-                <div
-                  class="progress-bar-fill"
-                  :style="{ width: scanProgress + '%' }"
-                ></div>
-              </div>
-              <div class="progress-meta">
-                <span>{{ t.progress(scannedHosts, totalHosts) }}</span>
-                <span>{{ t.currentIp(currentHost) }}</span>
-              </div>
-            </div>
-
-            <!-- 数据快照指标 -->
-            <div class="stats-grid">
-              <div class="stat-card">
-                <span class="stat-label">{{ t.aliveHosts }}</span>
-                <span class="stat-val text-success">{{
-                  stats.totalAlive
-                }}</span>
-              </div>
-              <div class="stat-card">
-                <span class="stat-label">{{ t.openPorts }}</span>
-                <span class="stat-val text-info">{{
-                  stats.openPortCount
-                }}</span>
-              </div>
-              <div class="stat-card" v-if="isScanning">
-                <span class="stat-label">{{ t.elapsedTime }}</span>
-                <span class="stat-val font-mono">{{ scanDuration }}s</span>
-              </div>
-              <div class="stat-card" v-else-if="selectedTask">
-                <span class="stat-label">{{ t.totalTime }}</span>
-                <span class="stat-val font-mono">{{ totalTime }}s</span>
-              </div>
-            </div>
-
-            <!-- 端口分布 -->
-            <div
-              class="ports-chart-container"
-              v-if="stats.sortedPorts.length > 0"
-            >
-              <label>{{ t.popularPorts }}</label>
-              <div class="port-bar-list">
-                <div
-                  v-for="item in stats.sortedPorts"
-                  :key="item.port"
-                  class="port-bar-item"
+              <div class="action-buttons">
+                <VustButton
+                  class="scan-action"
+                  type="secondary"
+                  size="large"
+                  :loading="isScanning"
+                  :disabled="isScanning"
+                  @click="startScan"
                 >
-                  <span class="port-num font-mono">PORT {{ item.port }}</span>
-                  <div class="port-track">
-                    <div
-                      class="port-fill"
-                      :style="{
-                        width: (item.count / stats.totalAlive) * 100 + '%',
-                      }"
-                    ></div>
-                  </div>
-                  <span class="port-count font-mono">{{
-                    t.hostsCount(item.count)
+                  <VustIcon v-if="!isScanning" name="play" :size="16" />
+                  {{ isScanning ? t.scanning : t.startScan }}
+                </VustButton>
+                <VustButton
+                  v-if="isScanning"
+                  class="scan-action"
+                  type="danger"
+                  size="large"
+                  :loading="isCanceling"
+                  :disabled="isCanceling"
+                  @click="cancelScan"
+                >
+                  <VustIcon v-if="!isCanceling" name="stop" :size="16" />
+                  {{ isCanceling ? t.cancelingScan : t.cancelScan }}
+                </VustButton>
+              </div>
+            </div>
+          </VustGlassSurface>
+
+          <!-- 实时扫描看板/指标 -->
+          <VustGlassSurface
+            class="panel stats-panel"
+            v-if="isScanning || stats.totalAlive > 0"
+          >
+            <div class="panel-header">
+              <VustIcon name="chart" :size="16" />
+              <span>{{ t.scanOverview }}</span>
+            </div>
+            <div class="panel-body">
+              <!-- 实时进度条 -->
+              <div class="progress-bar-container" v-if="isScanning">
+                <div class="progress-bar-header">
+                  <span>{{ t.executing }}</span>
+                  <span>{{ scanProgress }}%</span>
+                </div>
+                <div class="progress-bar-track">
+                  <div
+                    class="progress-bar-fill"
+                    :style="{ width: scanProgress + '%' }"
+                  ></div>
+                </div>
+                <div class="progress-meta">
+                  <span>{{ t.progress(scannedHosts, totalHosts) }}</span>
+                  <span>{{ t.currentIp(currentHost) }}</span>
+                </div>
+              </div>
+
+              <!-- 数据快照指标 -->
+              <div class="stats-grid">
+                <div class="stat-card">
+                  <span class="stat-label">{{ t.aliveHosts }}</span>
+                  <span class="stat-val text-success">{{
+                    stats.totalAlive
                   }}</span>
                 </div>
+                <div class="stat-card">
+                  <span class="stat-label">{{ t.openPorts }}</span>
+                  <span class="stat-val text-info">{{
+                    stats.openPortCount
+                  }}</span>
+                </div>
+                <div class="stat-card" v-if="isScanning">
+                  <span class="stat-label">{{ t.elapsedTime }}</span>
+                  <span class="stat-val font-mono">{{ scanDuration }}s</span>
+                </div>
+                <div class="stat-card" v-else-if="selectedTask">
+                  <span class="stat-label">{{ t.totalTime }}</span>
+                  <span class="stat-val font-mono">{{ totalTime }}s</span>
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <div class="body-right" data-ui="scan-workspace">
-        <VustTabs v-model="activeTab" :tabs="scanTabs" />
-
-        <div class="tab-content" v-if="activeTab === 'realtime'">
-          <HostGridPanel
-            :ip-list="ipList"
-            :ip-states="ipStates"
-            :results="currentResults"
-            :interactive="isScanning || Boolean(selectedTask)"
-            :collapsed="activeWorkspacePanel !== 'hosts'"
-            @select="highlightHost"
-            @toggle="toggleWorkspacePanel('hosts')"
-          />
-
-          <!-- 报告结果指纹列表 -->
-          <div
-            class="panel results-panel"
-            :class="{ collapsed: activeWorkspacePanel !== 'report' }"
-          >
-            <button
-              type="button"
-              class="panel-header panel-toggle"
-              :aria-expanded="activeWorkspacePanel === 'report'"
-              @click="toggleWorkspacePanel('report')"
-            >
-              <VustIcon class="panel-chevron" name="chevron-down" :size="16" />
-              <VustIcon name="server" :size="16" />
-              <span>{{ t.assetReport }}</span>
-              <span class="panel-count">{{
-                t.itemsCount(currentResults.length)
-              }}</span>
-            </button>
-            <div
-              v-if="activeWorkspacePanel === 'report'"
-              class="panel-body report-scroll"
-            >
-              <VustEmpty
-                v-if="currentResults.length === 0"
-                icon="network"
-                :description="t.realtimeReportDesc"
-              />
-
-              <div class="results-list" v-else>
-                <div
-                  v-for="host in currentResults"
-                  :key="host.host"
-                  :id="'host-' + host.host"
-                  class="host-card"
-                  :class="{ expanded: host.expanded }"
-                  @click="host.expanded = !host.expanded"
-                >
-                  <div class="card-summary">
-                    <div class="summary-left">
-                      <span class="icon-chevron"></span>
-                      <span class="host-ip font-mono">{{ host.host }}</span>
-                      <span
-                        class="badge-ports"
-                        v-if="portCount(host, 'open') > 0"
-                      >
-                        {{ t.openPortsCount(portCount(host, "open")) }}
-                      </span>
-                      <span
-                        class="badge-ports closed"
-                        v-if="portCount(host, 'closed') > 0"
-                      >
-                        {{ t.closedPortsCount(portCount(host, "closed")) }}
-                      </span>
-                    </div>
-                    <div class="summary-right font-mono">
-                      {{ host.detail }}
-                    </div>
-                  </div>
-
-                  <!-- 展开显示详情 -->
-                  <div class="card-detail" v-if="host.expanded">
-                    <div class="detail-section">
-                      <div class="section-title">{{ t.portDetailTitle }}</div>
+              <!-- 端口分布 -->
+              <div
+                class="ports-chart-container"
+                v-if="stats.sortedPorts.length > 0"
+              >
+                <label>{{ t.popularPorts }}</label>
+                <div class="port-bar-list">
+                  <div
+                    v-for="item in stats.sortedPorts"
+                    :key="item.port"
+                    class="port-bar-item"
+                  >
+                    <span class="port-num font-mono">PORT {{ item.port }}</span>
+                    <div class="port-track">
                       <div
-                        class="ports-table-wrapper"
-                        v-if="host.parsedPorts && host.parsedPorts.length > 0"
-                      >
-                        <table class="ports-table">
-                          <thead>
-                            <tr>
-                              <th>{{ t.thPort }}</th>
-                              <th>{{ t.thStatus }}</th>
-                              <th>{{ t.thBanner }}</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr v-for="p in host.parsedPorts" :key="p.port">
-                              <td class="font-mono text-primary">
-                                PORT {{ p.port }}
-                              </td>
-                              <td>
-                                <span class="badge-status" :class="p.status">
-                                  {{ portStatusLabel(p.status) }}
-                                </span>
-                              </td>
-                              <td>
-                                <code class="banner-code font-mono">{{
-                                  portBannerText(p)
-                                }}</code>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                      <div class="no-ports-notice" v-else>
-                        {{ t.hostIcmpOnlyNotice }}
-                      </div>
+                        class="port-fill"
+                        :style="{
+                          width: (item.count / stats.totalAlive) * 100 + '%',
+                        }"
+                      ></div>
                     </div>
+                    <span class="port-count font-mono">{{
+                      t.hostsCount(item.count)
+                    }}</span>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          </VustGlassSurface>
         </div>
 
-        <!-- 历史报告 TAB -->
-        <div class="tab-content" v-else>
-          <div class="panel history-panel">
-            <div class="panel-header">
-              <VustIcon name="log" :size="16" />
-              <span>{{ t.historyReports }}</span>
-            </div>
-            <div class="panel-body report-scroll">
-              <VustEmpty
-                v-if="tasksList.length === 0"
-                icon="log"
-                :description="t.historyReportDesc"
-              />
+        <div class="body-right" data-ui="scan-workspace">
+          <VustTabs v-model="activeTab" :tabs="scanTabs" />
 
-              <div class="history-list" v-else>
-                <div
-                  v-for="task in tasksList"
-                  :key="task.id"
-                  class="history-item"
-                  @click="handleHistoryItemClick(task.id)"
-                >
-                  <div class="history-left">
-                    <div class="history-cidr font-mono">{{ task.cidr }}</div>
-                    <div class="history-meta">
-                      <span>{{
-                        t.scanMethod(
-                          task.scan_type === "tcp"
-                            ? t.tcpModeLabel
-                            : t.icmpModeLabel,
-                        )
-                      }}</span>
-                      <span>{{ t.scanPorts(task.ports) }}</span>
-                      <span>{{
-                        t.scanTime(new Date(task.created_at).toLocaleString())
-                      }}</span>
+          <div class="tab-content" v-if="activeTab === 'realtime'">
+            <HostGridPanel
+              :ip-list="ipList"
+              :ip-states="ipStates"
+              :results="currentResults"
+              :interactive="isScanning || Boolean(selectedTask)"
+              :collapsed="activeWorkspacePanel !== 'hosts'"
+              @select="highlightHost"
+              @toggle="toggleWorkspacePanel('hosts')"
+            />
+
+            <!-- 报告结果指纹列表 -->
+            <VustGlassSurface
+              class="panel results-panel"
+              :class="{ collapsed: activeWorkspacePanel !== 'report' }"
+            >
+              <button
+                type="button"
+                class="panel-header panel-toggle"
+                :aria-expanded="activeWorkspacePanel === 'report'"
+                @click="toggleWorkspacePanel('report')"
+              >
+                <VustIcon
+                  class="panel-chevron"
+                  name="chevron-down"
+                  :size="16"
+                />
+                <VustIcon name="server" :size="16" />
+                <span>{{ t.assetReport }}</span>
+                <span class="panel-count">{{
+                  t.itemsCount(currentResults.length)
+                }}</span>
+              </button>
+              <div
+                v-if="activeWorkspacePanel === 'report'"
+                class="panel-body report-scroll"
+              >
+                <VustEmpty
+                  v-if="currentResults.length === 0"
+                  icon="network"
+                  :description="t.realtimeReportDesc"
+                />
+
+                <div class="results-list" v-else>
+                  <div
+                    v-for="host in currentResults"
+                    :key="host.host"
+                    :id="'host-' + host.host"
+                    class="host-card"
+                    :class="{ expanded: host.expanded }"
+                    @click="host.expanded = !host.expanded"
+                  >
+                    <div class="card-summary">
+                      <div class="summary-left">
+                        <span class="icon-chevron"></span>
+                        <span class="host-ip font-mono">{{ host.host }}</span>
+                        <span
+                          class="badge-ports"
+                          v-if="portCount(host, 'open') > 0"
+                        >
+                          {{ t.openPortsCount(portCount(host, "open")) }}
+                        </span>
+                        <span
+                          class="badge-ports closed"
+                          v-if="portCount(host, 'closed') > 0"
+                        >
+                          {{ t.closedPortsCount(portCount(host, "closed")) }}
+                        </span>
+                      </div>
+                      <div class="summary-right font-mono">
+                        {{ host.detail }}
+                      </div>
                     </div>
-                  </div>
 
-                  <div class="history-right">
-                    <span
-                      class="history-stat"
-                      v-html="t.foundAliveHosts(task.alive_hosts)"
-                    ></span>
-                    <VustButton
-                      type="danger"
-                      size="small"
-                      @click="showDeleteConfirm(task.id, $event)"
-                    >
-                      <VustIcon name="trash" :size="14" />
-                      {{ t.delete }}
-                    </VustButton>
+                    <!-- 展开显示详情 -->
+                    <div class="card-detail" v-if="host.expanded">
+                      <div class="detail-section">
+                        <div class="section-title">{{ t.portDetailTitle }}</div>
+                        <div
+                          class="ports-table-wrapper"
+                          v-if="host.parsedPorts && host.parsedPorts.length > 0"
+                        >
+                          <table class="ports-table">
+                            <thead>
+                              <tr>
+                                <th>{{ t.thPort }}</th>
+                                <th>{{ t.thStatus }}</th>
+                                <th>{{ t.thBanner }}</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr v-for="p in host.parsedPorts" :key="p.port">
+                                <td class="font-mono text-primary">
+                                  PORT {{ p.port }}
+                                </td>
+                                <td>
+                                  <span class="badge-status" :class="p.status">
+                                    {{ portStatusLabel(p.status) }}
+                                  </span>
+                                </td>
+                                <td>
+                                  <code class="banner-code font-mono">{{
+                                    portBannerText(p)
+                                  }}</code>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                        <div class="no-ports-notice" v-else>
+                          {{ t.hostIcmpOnlyNotice }}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </VustGlassSurface>
+          </div>
+
+          <!-- 历史报告 TAB -->
+          <div class="tab-content" v-else>
+            <VustGlassSurface class="panel history-panel">
+              <div class="panel-header">
+                <VustIcon name="log" :size="16" />
+                <span>{{ t.historyReports }}</span>
+              </div>
+              <div class="panel-body report-scroll">
+                <VustEmpty
+                  v-if="tasksList.length === 0"
+                  icon="log"
+                  :description="t.historyReportDesc"
+                />
+
+                <div class="history-list" v-else>
+                  <div
+                    v-for="task in tasksList"
+                    :key="task.id"
+                    class="history-item"
+                    @click="handleHistoryItemClick(task.id)"
+                  >
+                    <div class="history-left">
+                      <div class="history-cidr font-mono">{{ task.cidr }}</div>
+                      <div class="history-meta">
+                        <span>{{
+                          t.scanMethod(
+                            task.scan_type === "tcp"
+                              ? t.tcpModeLabel
+                              : t.icmpModeLabel,
+                          )
+                        }}</span>
+                        <span>{{ t.scanPorts(task.ports) }}</span>
+                        <span>{{
+                          t.scanTime(new Date(task.created_at).toLocaleString())
+                        }}</span>
+                      </div>
+                    </div>
+
+                    <div class="history-right">
+                      <span
+                        class="history-stat"
+                        v-html="t.foundAliveHosts(task.alive_hosts)"
+                      ></span>
+                      <VustButton
+                        type="danger"
+                        size="small"
+                        @click="showDeleteConfirm(task.id, $event)"
+                      >
+                        <VustIcon name="trash" :size="14" />
+                        {{ t.delete }}
+                      </VustButton>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </VustGlassSurface>
           </div>
         </div>
       </div>
+      <!-- 删除确认弹窗 -->
+      <VustModal
+        :visible="deleteModalVisible"
+        :title="t.confirmDelete"
+        :message="t.confirmDeleteMessage"
+        :confirm-text="t.confirmDelete"
+        :cancel-text="t.cancel"
+        type="danger"
+        @confirm="handleConfirmDelete"
+        @cancel="handleCancelDelete"
+      />
     </div>
-    <!-- 删除确认弹窗 -->
-    <VustModal
-      :visible="deleteModalVisible"
-      :title="t.confirmDelete"
-      :message="t.confirmDeleteMessage"
-      :confirm-text="t.confirmDelete"
-      :cancel-text="t.cancel"
-      type="danger"
-      @confirm="handleConfirmDelete"
-      @cancel="handleCancelDelete"
-    />
-  </div>
+  </VustGlassProvider>
 </template>
 
 <style>
@@ -666,13 +684,10 @@ body,
 /* 面板通用组件 */
 .panel {
   min-height: 0;
-  background-color: var(--vdl-bg-card);
-  border: 1px solid var(--vdl-border-default);
   border-radius: var(--vdl-radius-md);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: var(--vdl-shadow-panel);
 }
 
 .panel-header {
@@ -685,7 +700,7 @@ body,
   font-weight: 700;
   font-size: 13px;
   color: var(--vdl-text-primary);
-  background-color: var(--vdl-bg-panel);
+  background-color: color-mix(in srgb, var(--vdl-bg-panel) 72%, transparent);
 }
 
 .panel-toggle {
@@ -759,15 +774,12 @@ body,
   color: var(--vdl-text-secondary);
 }
 
-.form-group input,
-.form-group select {
-  padding: 8px 10px;
-  border: 1px solid var(--vdl-border-default);
-  border-radius: var(--vdl-radius-sm);
-  background-color: var(--vdl-bg-input);
-  color: var(--vdl-text-primary);
+.form-group .vl-input-wrapper {
+  width: 100%;
+}
+
+.form-group .vl-input {
   font-size: 13px;
-  outline: none;
 }
 
 .form-group .vl-select {
@@ -786,12 +798,6 @@ body,
 .vl-select-options .vl-select-option {
   font-size: 11px !important;
   padding: 4px var(--vdl-space-3) !important;
-}
-
-.form-group input:focus,
-.form-group select:focus {
-  border-color: var(--vdl-primary);
-  box-shadow: var(--vdl-focus-ring);
 }
 
 .form-row {

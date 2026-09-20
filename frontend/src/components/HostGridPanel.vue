@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { VustIcon } from "@vustcc/vue";
+import { VustGlassSurface, VustIcon } from "@vustcc/vue";
 import type {
   HostScanResult,
   HostState,
@@ -91,7 +91,11 @@ function tooltipColumnClass(index: number) {
 </script>
 
 <template>
-  <div class="host-grid-panel" :class="{ collapsed }" data-ui="host-grid">
+  <VustGlassSurface
+    class="host-grid-panel"
+    :class="{ collapsed }"
+    data-ui="host-grid"
+  >
     <button
       type="button"
       class="host-grid-toolbar"
@@ -165,7 +169,7 @@ function tooltipColumnClass(index: number) {
         </button>
       </div>
     </div>
-  </div>
+  </VustGlassSurface>
 </template>
 
 <style scoped>
@@ -175,8 +179,6 @@ function tooltipColumnClass(index: number) {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  background: var(--vdl-bg-card);
-  border: 1px solid var(--vdl-border-default);
   border-radius: var(--vdl-radius-md);
   overflow: hidden;
 }

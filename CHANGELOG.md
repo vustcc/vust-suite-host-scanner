@@ -1,8 +1,18 @@
-# 更新日志
+# Changelog
+
+## [Unreleased]
+
+### Added
+
+- 接入 Suite Runtime 主题桥接，支持跟随 VUST 主控实时同步主题与液态玻璃开关。
+
+### Changed
+
+- 扫描配置、实时状态、主机结果和任务历史面板全面适配公共 Liquid Glass 材质，并统一标准图标、表单和操作控件的视觉表现。
 
 ## [0.1.0-alpha.1] - 2026-09-10
 
-### 新增
+### Added
 
 - 创建 VUST 主机扫描套件全新仓库。
 - 支持 `/24` 至 `/32` IPv4 CIDR、ICMP 存活探测、TCP 端口探测与 Banner 服务识别。
